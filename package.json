@@ -1,5 +1,5 @@
 {
-  "name": "maps-router",
+  "name": "vue-google-maps-directions",
   "version": "0.1.0",
   "private": true,
   "scripts": {

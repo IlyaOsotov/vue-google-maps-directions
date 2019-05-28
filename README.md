@@ -1,4 +1,4 @@
-# maps-router
+# vue-google-maps-directions
 
 ## Project setup
 ```
