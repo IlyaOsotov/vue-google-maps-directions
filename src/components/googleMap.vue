@@ -32,6 +32,10 @@ export default {
     return {
       citiesList: ['Башня Федерация', 'Красная площадь'],
       newCity: '',
+      markerArray: [],
+      directionsService: null,
+      directionsDisplay: null,
+      stepDisplay: null,
     };
   },
   components: {
@@ -48,7 +52,10 @@ export default {
     removeCity(element) {
       this.citiesList = this.citiesList.filter(el => el !== element);
     },
-    calculateAndDisplayRoute(directionsDisplay, directionsService) {
+    calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray, stepDisplay, map) {
+      for (let i = 0; i < markerArray.length; i += 1) {
+        markerArray[i].setMap(null);
+      }
       const { 0: first, [this.citiesList.length - 1]: last } = this.citiesList;
       directionsService.route({
         origin: first,
@@ -57,16 +64,37 @@ export default {
       }, (response, status) => {
         if (status === 'OK') {
           directionsDisplay.setDirections(response);
+          this.showSteps(response, markerArray, stepDisplay, map);
         }
+      });
+    },
+    showSteps(directionResult, markerArray, stepDisplay, map) {
+      const route = directionResult.routes[0].legs[0];
+      for (let i = 0; i < route.steps.length; i += 1) {
+        const marker = markerArray[i] || new this.google.maps.Marker();
+        marker.setMap(map);
+        marker.setPosition(route.steps[i].start_location);
+        this.attachInstructionText(stepDisplay, marker, route.steps[i].instructions, map);
+      }
+    },
+    attachInstructionText(stepDisplay, marker, text, map) {
+      this.google.maps.event.addListener(marker, 'click', () => {
+        stepDisplay.setContent(text);
+        stepDisplay.open(map, marker);
       });
     },
   },
   mounted() {
     this.$refs.mapRef.$mapPromise.then((map) => {
-      const directionsService = new this.google.maps.DirectionsService();
-      const directionsDisplay = new this.google.maps.DirectionsRenderer({ map });
+      this.directionsService = new this.google.maps.DirectionsService();
+      this.directionsDisplay = new this.google.maps.DirectionsRenderer({ map });
+      this.stepDisplay = new this.google.maps.InfoWindow();
 
-      this.calculateAndDisplayRoute(directionsDisplay, directionsService);
+      this.calculateAndDisplayRoute(this.directionsDisplay,
+        this.directionsService,
+        this.markerArray,
+        this.stepDisplay,
+        map);
     });
   },
 };
