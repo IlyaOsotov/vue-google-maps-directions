@@ -60,7 +60,7 @@ export default {
       this.directionsService.route({
         origin: first,
         destination: last,
-        travelMode: 'WALKING',
+        travelMode: 'WALKING', // DRIVING
         waypoints: other.length === 0 ? [] : other.map(el => ({ location: el })),
       }, (response, status) => {
         if (status === 'OK') {
@@ -68,11 +68,20 @@ export default {
         }
       });
     },
+    updateCities() {
+      // TODO: UPDATE cities
+    },
   },
   mounted() {
     this.$refs.mapRef.$mapPromise.then((map) => {
       this.directionsService = new this.google.maps.DirectionsService();
-      this.directionsDisplay = new this.google.maps.DirectionsRenderer({ map });
+      this.directionsDisplay = new this.google.maps.DirectionsRenderer({ draggable: true, map });
+      const that = this;
+      this.directionsDisplay.addListener('directions_changed', () => {
+        // that.updateCities(that.directionsDisplay.getDirections());
+        that.updateCities();
+      });
+
 
       this.calculateAndDisplayRoute(this.directionsDisplay,
         this.directionsService);
