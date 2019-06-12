@@ -35,7 +35,6 @@ export default {
       markerArray: [],
       directionsService: null,
       directionsDisplay: null,
-      stepDisplay: null,
     };
   },
   components: {
@@ -52,7 +51,7 @@ export default {
     removeCity(element) {
       this.citiesList = this.citiesList.filter(el => el !== element);
     },
-    calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray, stepDisplay, map) {
+    calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray) {
       for (let i = 0; i < markerArray.length; i += 1) {
         markerArray[i].setMap(null);
       }
@@ -64,23 +63,7 @@ export default {
       }, (response, status) => {
         if (status === 'OK') {
           directionsDisplay.setDirections(response);
-          this.showSteps(response, markerArray, stepDisplay, map);
         }
-      });
-    },
-    showSteps(directionResult, markerArray, stepDisplay, map) {
-      const route = directionResult.routes[0].legs[0];
-      for (let i = 0; i < route.steps.length; i += 1) {
-        const marker = markerArray[i] || new this.google.maps.Marker();
-        marker.setMap(map);
-        marker.setPosition(route.steps[i].start_location);
-        this.attachInstructionText(stepDisplay, marker, route.steps[i].instructions, map);
-      }
-    },
-    attachInstructionText(stepDisplay, marker, text, map) {
-      this.google.maps.event.addListener(marker, 'click', () => {
-        stepDisplay.setContent(text);
-        stepDisplay.open(map, marker);
       });
     },
   },
@@ -88,13 +71,10 @@ export default {
     this.$refs.mapRef.$mapPromise.then((map) => {
       this.directionsService = new this.google.maps.DirectionsService();
       this.directionsDisplay = new this.google.maps.DirectionsRenderer({ map });
-      this.stepDisplay = new this.google.maps.InfoWindow();
 
       this.calculateAndDisplayRoute(this.directionsDisplay,
         this.directionsService,
-        this.markerArray,
-        this.stepDisplay,
-        map);
+        this.markerArray);
     });
   },
 };
