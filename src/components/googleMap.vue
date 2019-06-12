@@ -13,7 +13,8 @@
       v-model="citiesList"
       group="cities"
       @start="drag=true"
-      @end="drag=false">
+      @end="drag=false"
+      @change="calculateAndDisplayRoute()">
       <div class="list-group-item-container" v-for="element in citiesList" :key="element">
         <div class="inline list-group-item">{{element}}</div>
         <button class="inline remove" @click="removeCity(element)">x</button>
@@ -30,9 +31,8 @@ export default {
   name: 'google-map',
   data() {
     return {
-      citiesList: ['Башня Федерация', 'Красная площадь'],
+      citiesList: ['Красная площадь', 'парк горького'],
       newCity: '',
-      markerArray: [],
       directionsService: null,
       directionsDisplay: null,
     };
@@ -47,22 +47,24 @@ export default {
     addCity() {
       this.citiesList.push(this.newCity);
       this.newCity = '';
+      this.calculateAndDisplayRoute();
     },
     removeCity(element) {
       this.citiesList = this.citiesList.filter(el => el !== element);
+      this.calculateAndDisplayRoute();
     },
-    calculateAndDisplayRoute(directionsDisplay, directionsService, markerArray) {
-      for (let i = 0; i < markerArray.length; i += 1) {
-        markerArray[i].setMap(null);
-      }
-      const { 0: first, [this.citiesList.length - 1]: last } = this.citiesList;
-      directionsService.route({
+    calculateAndDisplayRoute() {
+      if (this.citiesList.length < 2) { return; }
+      const [first, ...other] = this.citiesList;
+      const last = other.pop();
+      this.directionsService.route({
         origin: first,
         destination: last,
         travelMode: 'WALKING',
+        waypoints: other.length === 0 ? [] : other.map(el => ({ location: el })),
       }, (response, status) => {
         if (status === 'OK') {
-          directionsDisplay.setDirections(response);
+          this.directionsDisplay.setDirections(response);
         }
       });
     },
@@ -73,8 +75,7 @@ export default {
       this.directionsDisplay = new this.google.maps.DirectionsRenderer({ map });
 
       this.calculateAndDisplayRoute(this.directionsDisplay,
-        this.directionsService,
-        this.markerArray);
+        this.directionsService);
     });
   },
 };
